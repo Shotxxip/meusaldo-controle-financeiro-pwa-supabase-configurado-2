@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, CreditCard, LayoutDashboard, LogOut, Menu, Tags, Target, Wallet, X } from "lucide-react";
+import { BarChart3, CreditCard, LayoutDashboard, LogOut, Menu, Tags, Wallet, X, Target, PiggyBank } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -14,6 +14,7 @@ const links = [
   { href: "/transacoes", label: "Transações", icon: CreditCard },
   { href: "/categorias", label: "Categorias", icon: Tags },
   { href: "/metas", label: "Metas", icon: Target },
+  { href: "/economias", label: "Economias", icon: PiggyBank },
 ];
 
 export function AppShell({ children, email }: { children: ReactNode; email: string }) {

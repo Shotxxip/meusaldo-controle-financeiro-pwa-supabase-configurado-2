@@ -10,6 +10,7 @@ import { formatCurrency, getSixMonthLabels, monthLabel, monthRange, totals } fro
 import { TransactionDialog } from "@/components/transactions/transaction-dialog";
 import { TransactionRow } from "@/components/transactions/transaction-row";
 import type { Transaction } from "@/types/finance";
+import { SavingsWidgets } from "@/components/savings/savings-widgets";
 
 export function Dashboard() {
   const { transactions, categories, loading, error, refresh } = useFinanceData();
@@ -66,6 +67,8 @@ export function Dashboard() {
       <article className="summary-card income-card"><div className="summary-card-top"><span>Receitas do mês</span><span className="summary-icon"><TrendingUp size={19} /></span></div><strong className="summary-value">{loading ? "••••••" : formatCurrency(paidMonthTotals.income)}</strong><div className="summary-foot"><ArrowDownLeft size={14} />Entradas confirmadas</div></article>
       <article className="summary-card expense-card"><div className="summary-card-top"><span>Despesas do mês</span><span className="summary-icon"><TrendingDown size={19} /></span></div><strong className="summary-value">{loading ? "••••••" : formatCurrency(paidMonthTotals.expense)}</strong><div className="summary-foot"><ArrowUpRight size={14} />Saídas confirmadas</div></article>
     </section>
+
+    <SavingsWidgets />
 
     <section className="charts-grid">
       <article className="panel chart-panel"><div className="panel-heading"><div><h2>Despesas por categoria</h2><p>Distribuição dos gastos no período</p></div><span className="panel-kicker">{title}</span></div>
