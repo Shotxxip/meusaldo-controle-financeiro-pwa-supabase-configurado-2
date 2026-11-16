@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { AppearanceProvider } from "@/components/settings/appearance";
 import { PwaRegister } from "@/components/layout/pwa-register";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -21,5 +22,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pt-BR" suppressHydrationWarning><body><ThemeProvider><PwaRegister />{children}<Toaster richColors position="top-right" /></ThemeProvider></body></html>;
+  return <html lang="pt-BR" suppressHydrationWarning><body><ThemeProvider><AppearanceProvider><PwaRegister />{children}<Toaster richColors position="top-right" /></AppearanceProvider></ThemeProvider></body></html>;
 }

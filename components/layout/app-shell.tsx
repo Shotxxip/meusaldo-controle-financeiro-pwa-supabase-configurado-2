@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, CreditCard, LayoutDashboard, LogOut, Menu, Tags, Wallet, X, Target, PiggyBank } from "lucide-react";
+import { CreditCard, LayoutDashboard, LogOut, Menu, Tags, X, Target, PiggyBank, Palette } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BrandIdentity } from "@/components/settings/appearance";
 import { cn } from "@/lib/utils/cn";
 import type { ReactNode } from "react";
 
@@ -15,6 +16,7 @@ const links = [
   { href: "/categorias", label: "Categorias", icon: Tags },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/economias", label: "Economias", icon: PiggyBank },
+  { href: "/aparencia", label: "Aparência", icon: Palette }
 ];
 
 export function AppShell({ children, email }: { children: ReactNode; email: string }) {
@@ -30,12 +32,10 @@ export function AppShell({ children, email }: { children: ReactNode; email: stri
       await supabase.auth.signOut();
       router.replace("/login");
       router.refresh();
-    } finally {
-      setLoggingOut(false);
-    }
+    } finally { setLoggingOut(false); }
   }
 
-  const nav = (mobile = false) => links.map(({ href, label, icon: Icon }) => {
+  const nav = (mobile = false) => (mobile ? links.filter(link => link.href !== "/aparencia") : links).map(({ href, label, icon: Icon }) => {
     const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
     return <Link key={href} href={href} onClick={() => setMenuOpen(false)} className={cn(mobile ? "bottom-link" : "sidebar-link", active && "active")}>
       <Icon size={mobile ? 20 : 19} strokeWidth={active ? 2.3 : 1.8} />
@@ -45,7 +45,7 @@ export function AppShell({ children, email }: { children: ReactNode; email: stri
 
   return <div className="app-frame">
     <aside className="sidebar">
-      <Link className="brand" href="/"><span className="brand-mark"><Wallet size={20} /></span><span>Meu<span className="brand-accent">Saldo</span></span></Link>
+      <Link className="brand" href="/"><BrandIdentity /></Link>
       <div className="sidebar-caption">MENU PRINCIPAL</div>
       <nav className="sidebar-nav">{nav()}</nav>
       <div className="sidebar-bottom">
@@ -57,7 +57,7 @@ export function AppShell({ children, email }: { children: ReactNode; email: stri
 
     {menuOpen && <button className="mobile-backdrop" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} />}
     <aside className={cn("mobile-drawer", menuOpen && "open")}>
-      <div className="drawer-head"><Link className="brand" href="/"><span className="brand-mark"><Wallet size={20} /></span><span>Meu<span className="brand-accent">Saldo</span></span></Link><button className="icon-button" onClick={() => setMenuOpen(false)} aria-label="Fechar menu"><X size={19} /></button></div>
+      <div className="drawer-head"><Link className="brand" href="/"><BrandIdentity /></Link><button className="icon-button" onClick={() => setMenuOpen(false)} aria-label="Fechar menu"><X size={19} /></button></div>
       <div className="sidebar-caption">MENU PRINCIPAL</div><nav className="sidebar-nav">{nav()}</nav>
       <div className="drawer-account">{email}</div><button className="sidebar-link signout" type="button" onClick={signOut}><LogOut size={18} /><span>Sair da conta</span></button>
     </aside>
@@ -66,7 +66,7 @@ export function AppShell({ children, email }: { children: ReactNode; email: stri
       <header className="topbar">
         <button className="icon-button mobile-menu-button" aria-label="Abrir menu" onClick={() => setMenuOpen(true)}><Menu size={20} /></button>
         <div className="topbar-context"><span className="topbar-dot" /> CONTROLE FINANCEIRO</div>
-        <div className="topbar-actions"><ThemeToggle /><div className="topbar-avatar" title={email}>{email.charAt(0).toUpperCase()}</div></div>
+        <div className="topbar-actions"><ThemeToggle /><Link href="/aparencia" className="icon-button" aria-label="Personalizar aparência"><Palette size={18} /></Link><div className="topbar-avatar" title={email}>{email.charAt(0).toUpperCase()}</div></div>
       </header>
       <div className="page-content">{children}</div>
     </main>
