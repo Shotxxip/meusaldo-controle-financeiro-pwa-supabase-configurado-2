@@ -587,3 +587,25 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 520px) { .savings-goal-foot { align-items: stretch; } .savings-goal-foot .button { width: 100%; } .savings-section > .page-heading { flex-direction: column; align-items: stretch; } }
 
 @media (max-width: 520px) { .bottom-link { min-width: 0; flex: 1; font-size: 9px; } .bottom-nav { padding-left: 4px; padding-right: 4px; } }
+
+
+/* MeuSaldo v5 — animações e celebrações leves */
+.savings-progress > span, .goals-progress-fill { transition: width .65s cubic-bezier(.22,1,.36,1); }
+.savings-goal-card, .summary-card, .savings-coverage { transition: transform .22s ease, box-shadow .22s ease; }
+@media (hover: hover) {
+  .savings-goal-card:hover, .savings-coverage:hover { transform: translateY(-2px); }
+}
+.savings-encouragement { color: var(--primary); font-size: 11px; font-weight: 650; margin: 9px 0 0; }
+.savings-celebration { position: fixed; inset: 0; pointer-events: none; z-index: 1000; overflow: hidden; }
+.savings-celebration-message { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 28px); display: flex; align-items: center; gap: 11px; padding: 13px 14px; border-radius: 13px; color: var(--foreground); background: var(--panel); border: 1px solid var(--border-strong); box-shadow: 0 14px 40px rgba(0,0,0,.14); font-weight: 700; animation: savings-toast-in .35s ease-out both; pointer-events: auto; }
+.savings-celebration-message > svg { color: var(--green); flex-shrink: 0; }
+.savings-celebration-message button { border: 0; background: transparent; color: var(--muted-foreground); display: flex; padding: 4px; }
+.savings-confetti { position: absolute; inset: 0; overflow: hidden; }
+.savings-confetti span { position: absolute; top: -15px; width: 7px; height: 12px; border-radius: 2px; opacity: 0; animation-name: savings-fall; animation-timing-function: ease-in; animation-fill-mode: both; }
+@keyframes savings-fall { 0% { opacity: 0; translate: 0 -12px; rotate: 0deg; } 10% { opacity: .85; } 85% { opacity: .8; } 100% { opacity: 0; translate: 28px 95vh; rotate: 320deg; } }
+@keyframes savings-toast-in { from { opacity: 0; translate: 0 -12px; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .savings-progress > span, .goals-progress-fill, .savings-goal-card, .summary-card, .savings-coverage { transition: none !important; }
+  .savings-celebration-message { animation: none !important; }
+  .savings-confetti { display: none !important; }
+}

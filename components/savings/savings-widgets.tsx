@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { SavingsCelebration, celebrateSaving, celebrateMilestone } from "@/components/savings/savings-celebration";
 import Link from "next/link";
 import { ArrowRight, Check, PiggyBank, Plus, Target, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -46,6 +47,8 @@ export function SavingsWidgets({ full = false }: { full?: boolean }) {
   const [savingDate, setSavingDate] = useState(() => new Date().toLocaleDateString("en-CA"));
   const [savingOpen, setSavingOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [celebration, setCelebration] = useState<{ id: number; message: string } | null>(null);
+  const showCelebration = (message: string) => setCelebration({ id: Date.now(), message });
   const totalSaved = useMemo(() => money(entries.reduce((sum, entry) => sum + Number(entry.amount), 0)), [entries]);
   const totalAllocated = useMemo(() => money(allocations.reduce((sum, item) => sum + Number(item.amount), 0)), [allocations]);
   const available = Math.max(0, money(totalSaved - totalAllocated));
@@ -67,7 +70,7 @@ export function SavingsWidgets({ full = false }: { full?: boolean }) {
     try {
       const { error: insertError } = await createClient().from("savings_entries").insert({ user_id: userId, amount, description: savingDescription.trim() || null, date: new Date(`${savingDate}T12:00:00`).toISOString() });
       if (insertError) throw insertError;
-      toast.success("Economia registrada."); setSavingOpen(false); setSavingAmount(""); setSavingDescription(""); await refresh();
+      toast.success("Economia registrada."); showCelebration(celebrateSaving(amount)); setSavingOpen(false); setSavingAmount(""); setSavingDescription(""); await refresh();
     } catch (cause) { toast.error(cause instanceof Error ? cause.message : "Erro ao registrar economia."); }
     finally { setSubmitting(false); }
   }
@@ -82,6 +85,10 @@ export function SavingsWidgets({ full = false }: { full?: boolean }) {
     try {
       const { error: insertError } = await createClient().from("goal_allocations").insert({ user_id: userId, goal_item_id: goalToAllocate.id, amount });
       if (insertError) throw insertError;
+      const previous = percent(allocatedByGoal.get(goalToAllocate.id) ?? 0, Number(goalToAllocate.price) * Number(goalToAllocate.quantity));
+      const next = percent((allocatedByGoal.get(goalToAllocate.id) ?? 0) + amount, Number(goalToAllocate.price) * Number(goalToAllocate.quantity));
+      const milestone = celebrateMilestone(previous, next, goalToAllocate.title);
+      if (milestone) showCelebration(milestone);
       toast.success("Economias alocadas à meta."); setGoalToAllocate(null); setAllocationAmount(""); await refresh();
     } catch (cause) { toast.error(cause instanceof Error ? cause.message : "Não foi possível alocar."); }
     finally { setSubmitting(false); }
@@ -98,11 +105,11 @@ export function SavingsWidgets({ full = false }: { full?: boolean }) {
     if (deleteError) toast.error(deleteError.message); else { toast.success("Alocação desfeita."); await refresh(); }
   }
 
-  return <div className="savings-section">
+  return <div className="savings-section"><SavingsCelebration celebration={celebration} onClose={() => setCelebration(null)} />
     {full && <div className="page-heading"><div><span className="eyebrow">SEU PLANEJAMENTO FINANCEIRO</span><h1>Gerenciamento de Economias</h1><p>Registre dinheiro guardado e distribua entre suas metas.</p></div><button className="button button-primary" onClick={() => setSavingOpen(true)}><Plus size={17} /> Registrar economia</button></div>}
     {error && <div className="inline-error">{error}</div>}
     {full && <section className="savings-overview">
-      <article className="summary-card income-card"><div className="summary-card-top"><span>Total Guardado</span><PiggyBank size={20} /></div><strong className="summary-value">{loading ? "Carregando..." : formatCurrency(totalSaved)}</strong><div className="summary-foot">Disponível para alocar: {formatCurrency(available)}</div></article>
+      <article className="summary-card income-card"><div className="summary-card-top"><span>Total Guardado</span><PiggyBank size={20} /></div><strong className="summary-value">{loading ? "Carregando..." : formatCurrency(totalSaved)}</strong><div className="summary-foot">Disponível para alocar: {formatCurrency(available)}</div><p className="savings-encouragement">Cada valor guardado é um passo para seus objetivos.</p></article>
       <article className="panel savings-coverage"><div className="panel-heading"><div><h2>Relatório de Cobertura</h2><p>Economias versus custo das metas ativas</p></div></div><strong className="savings-big-number">{coverage.toFixed(0)}%</strong><Progress value={coverage} label="Cobertura total das metas" /><div className="savings-coverage-detail"><span>Metas: {formatCurrency(totalTarget)}</span><strong>Falta cobrir: {formatCurrency(Math.max(0, money(totalTarget - totalSaved)))}</strong></div></article>
     </section>}
     <section className="savings-goals-section"><div className="panel-heading"><div><h2>{full ? "Alocação para Metas" : "Progresso das Metas"}</h2><p>{full ? "Distribua suas economias sem ultrapassar o saldo disponível." : "Veja quanto já foi reservado para cada objetivo."}</p></div>{!full && <Link href="/economias" className="text-link">Gerenciar economias <ArrowRight size={15} /></Link>}</div>
