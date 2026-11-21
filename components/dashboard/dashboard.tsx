@@ -99,9 +99,28 @@ export function Dashboard() {
       income={paidMonthTotals.income} expense={paidMonthTotals.expense}
       previousIncome={previousMonthTotals.income} previousExpense={previousMonthTotals.expense} />
 
-    <SavingsWidgets />
+    <div className="premium-section-controls">
+      <div><span className="eyebrow">SEU ESPAÇO</span><h2>Painel personalizado</h2></div>
+      <div className="premium-section-menu">
+        <button type="button" className="button button-ghost" aria-expanded={showCustomizer}
+          onClick={() => setShowCustomizer(value => !value)}>
+          <SlidersHorizontal size={16} /> Personalizar painéis
+        </button>
+        {showCustomizer && <div className="premium-section-popover">
+          {([
+            ["goals", "Minhas metas"],
+            ["charts", "Gráficos"],
+            ["recent", "Últimas transações"]
+          ] as const).map(([key, label]) => <label key={key} className="premium-section-option">
+            <input type="checkbox" checked={sections[key]} onChange={() => toggleSection(key)} />
+            <span>{label}</span>
+          </label>)}
+        </div>}
+      </div>
+    </div>
+    {sections.goals && <SavingsWidgets />}
 
-    <section className="charts-grid">
+    {sections.charts && <section className="charts-grid">
       <article className="panel chart-panel"><div className="panel-heading"><div><h2>Despesas por categoria</h2><p>Gastos registrados no mês (inclui pendentes)</p></div><span className="panel-kicker">{title}</span></div>
         {expensesByCategory.length ? <div className="donut-layout"><div className="donut-chart"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={expensesByCategory} dataKey="value" nameKey="name" innerRadius="62%" outerRadius="86%" paddingAngle={3} stroke="none">{expensesByCategory.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Pie><Tooltip formatter={(value) => formatCurrency(Number(value))} /></PieChart></ResponsiveContainer><div className="donut-center"><span>Total</span><strong>{formatCurrency(expensesByCategory.reduce((sum, item) => sum + item.value, 0))}</strong></div></div><div className="chart-legend">{expensesByCategory.slice(0, 6).map((item) => <div className="legend-item" key={item.name}><span className="legend-color" style={{ backgroundColor: item.color }} /><span>{item.name}</span><strong>{formatCurrency(item.value)}</strong></div>)}</div></div> : <div className="empty-chart"><div className="empty-icon"><CircleDollarSign size={25} /></div><strong>Nenhuma despesa neste mês</strong><span>Seus gastos por categoria aparecerão aqui.</span></div>}
       </article>
@@ -144,13 +163,24 @@ export function Dashboard() {
           </ResponsiveContainer>
         </div>
       </article>
-    </section>
+    </section>}
 
-    <section className="panel transactions-panel"><div className="panel-heading transaction-heading"><div><h2>Movimentações recentes</h2><p>Seus últimos lançamentos</p></div><a href="/transacoes" className="text-link">Ver todas <ArrowRight size={15} /></a></div>
+
+    {sections.recent && <section className="panel transactions-panel"><div className="panel-heading transaction-heading"><div><h2>Movimentações recentes</h2><p>Seus últimos lançamentos</p></div><a href="/transacoes" className="text-link">Ver todas <ArrowRight size={15} /></a></div>
       <div className="transaction-toolbar"><div className="search-field"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar lançamento..." aria-label="Buscar lançamento" /></div><div className="filter-tabs"><button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>Todas</button><button className={filter === "income" ? "active" : ""} onClick={() => setFilter("income")}>Receitas</button><button className={filter === "expense" ? "active" : ""} onClick={() => setFilter("expense")}>Despesas</button></div></div>
       {loading ? <div className="loading-list"><span className="loading-line" /><span className="loading-line" /><span className="loading-line" /></div> : recentTransactions.length ? <div className="transaction-list">{recentTransactions.map((item) => <TransactionRow key={item.id} transaction={item} onEdit={() => editTransaction(item)} onDelete={() => void deleteTransaction(item)} />)}</div> : <div className="empty-state"><div className="empty-icon"><Wallet size={24} /></div><strong>Nenhuma movimentação encontrada</strong><span>Adicione sua primeira receita ou despesa para começar.</span><button className="button button-secondary" onClick={() => { setEditing(null); setDialogOpen(true); }}><Plus size={16} /> Adicionar transação</button></div>}
-    </section>
-    <button className="mobile-fab" onClick={() => { setEditing(null); setDialogOpen(true); }} aria-label="Nova transação"><Plus size={24} /></button>
+    </section>}
+    <div className="premium-quick-actions">
+      {quickOpen && <nav className="premium-quick-menu" aria-label="Ações rápidas">
+        <button type="button" onClick={() => { setQuickOpen(false); setEditing(null); setDialogOpen(true); }}><Plus size={18} /> Nova transação</button>
+        <Link href="/economias?registrar=1" onClick={() => setQuickOpen(false)}><PiggyBank size={18} /> Guardar dinheiro</Link>
+        <Link href="/metas" onClick={() => setQuickOpen(false)}><Target size={18} /> Ver minhas metas</Link>
+      </nav>}
+      <button className="premium-quick-trigger" type="button" onClick={() => setQuickOpen(value => !value)}
+        aria-label={quickOpen ? "Fechar ações rápidas" : "Abrir ações rápidas"} aria-expanded={quickOpen}>
+        {quickOpen ? <X size={24} /> : <Plus size={24} />}
+      </button>
+    </div>
     <TransactionDialog open={dialogOpen} categories={categories} transaction={editing} onClose={() => { setDialogOpen(false); setEditing(null); }} onSaved={() => { void refresh(); }} />
   </div>;
 }
