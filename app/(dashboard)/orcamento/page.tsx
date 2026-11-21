@@ -7,10 +7,10 @@ import { formatCurrency } from "@/lib/utils/finance";
 const KEY = "meusaldo-v6-budget";
 type Limits = Record<string, number>;
 export default function OrcamentoPage() {
-  const { transactions, categories, loading, error } = useFinanceData();
+  const { transactions, categories, loading, error, userId } = useFinanceData();
   const [limits, setLimits] = useState<Limits>({});
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  useEffect(() => { try { setLimits(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { setLimits({}); } }, []);
+  useEffect(() => { if (!userId) return; try { setLimits(JSON.parse(localStorage.getItem(`${KEY}-${userId}`) || "{}")); } catch { setLimits({}); } }, [userId]);
   const spending = useMemo(() => {
     const result: Limits = {};
     for (const t of transactions) if (t.type === "expense" && t.date.startsWith(month)) {
@@ -22,7 +22,7 @@ export default function OrcamentoPage() {
     const value = Math.max(0, Number(raw) || 0);
     const next = { ...limits, [id]: value };
     setLimits(next);
-    try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* storage may be disabled */ }
+    try { if (userId) localStorage.setItem(`${KEY}-${userId}`, JSON.stringify(next)); } catch { /* storage may be disabled */ }
   }
   return <div className="content-page">
     <div className="page-heading"><div><span className="eyebrow">PLANEJAMENTO</span><h1>Orçamento mensal</h1><p>Defina limites para acompanhar seus gastos por categoria.</p></div></div>
