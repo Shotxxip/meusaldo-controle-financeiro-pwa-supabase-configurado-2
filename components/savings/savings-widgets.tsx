@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SavingsCelebration, celebrateSaving, celebrateMilestone } from "@/components/savings/savings-celebration";
 import Link from "next/link";
 import { ArrowRight, Check, PiggyBank, Plus, Target, Trash2, X } from "lucide-react";
@@ -28,9 +28,22 @@ function GoalCard({ goal, allocated, onAllocate }: { goal: GoalItem; allocated: 
   const progress = percent(allocated, total);
   return <article className="panel savings-goal-card">
     <div className="savings-goal-head">
-      {goal.image_url ? <img src={goal.image_url} alt={goal.title} className="savings-goal-image" loading="lazy" referrerPolicy="no-referrer" /> : <div className="savings-goal-image savings-goal-fallback"><Target size={24} /></div>}
-      <div className="savings-goal-title"><strong title={goal.title}>{goal.title}</strong><span>{goal.quantity} unidade(s) · {formatCurrency(total)}</span></div>
-      {goal.is_purchased && <span className="savings-purchased"><Check size={13} /> Comprado</span>}
+      <div className="savings-goal-media">
+        {goal.image_url ? <img src={goal.image_url} alt={goal.title} className="savings-goal-image" loading="lazy" referrerPolicy="no-referrer" />
+          : <div className="savings-goal-image savings-goal-fallback"><Target size={25} /></div>}
+      </div>
+      <div className="savings-goal-title"><strong title={goal.title}>{goal.title}</strong><span>{goal.quantity} unidade(s) · {formatCurrency(total)}</span>
+        {goal.is_purchased && <span className="savings-purchased"><Check size={13} /> Comprado</span>}
+      </div>
+      <div className="savings-goal-ring" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="64" height="64">
+          <circle cx="32" cy="32" r="25" fill="none" stroke="var(--border)" strokeWidth="6" />
+          <circle cx="32" cy="32" r="25" fill="none" stroke="var(--primary)"
+            strokeWidth="6" strokeLinecap="round" pathLength={100}
+            strokeDasharray={progress + " 100"} transform="rotate(-90 32 32)" />
+        </svg>
+        <span>{Math.round(progress)}%</span>
+      </div>
     </div>
     <div className="savings-goal-row"><span>Alocado: <strong>{formatCurrency(allocated)}</strong></span><strong>{progress.toFixed(0)}%</strong></div>
     <Progress value={progress} label={`Progresso de ${goal.title}`} />
@@ -46,6 +59,15 @@ export function SavingsWidgets({ full = false }: { full?: boolean }) {
   const [savingDescription, setSavingDescription] = useState("");
   const [savingDate, setSavingDate] = useState(() => new Date().toLocaleDateString("en-CA"));
   const [savingOpen, setSavingOpen] = useState(false);
+  useEffect(() => {
+    if (!full) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("registrar") !== "1") return;
+    setSavingOpen(true);
+    url.searchParams.delete("registrar");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  }, [full]);
+
   const [submitting, setSubmitting] = useState(false);
   const [celebration, setCelebration] = useState<{ id: number; message: string } | null>(null);
   const showCelebration = (message: string) => setCelebration({ id: Date.now(), message });
