@@ -102,11 +102,47 @@ export function Dashboard() {
     <SavingsWidgets />
 
     <section className="charts-grid">
-      <article className="panel chart-panel"><div className="panel-heading"><div><h2>Despesas por categoria</h2><p>Distribuição dos gastos no período</p></div><span className="panel-kicker">{title}</span></div>
+      <article className="panel chart-panel"><div className="panel-heading"><div><h2>Despesas por categoria</h2><p>Gastos registrados no mês (inclui pendentes)</p></div><span className="panel-kicker">{title}</span></div>
         {expensesByCategory.length ? <div className="donut-layout"><div className="donut-chart"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={expensesByCategory} dataKey="value" nameKey="name" innerRadius="62%" outerRadius="86%" paddingAngle={3} stroke="none">{expensesByCategory.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Pie><Tooltip formatter={(value) => formatCurrency(Number(value))} /></PieChart></ResponsiveContainer><div className="donut-center"><span>Total</span><strong>{formatCurrency(expensesByCategory.reduce((sum, item) => sum + item.value, 0))}</strong></div></div><div className="chart-legend">{expensesByCategory.slice(0, 6).map((item) => <div className="legend-item" key={item.name}><span className="legend-color" style={{ backgroundColor: item.color }} /><span>{item.name}</span><strong>{formatCurrency(item.value)}</strong></div>)}</div></div> : <div className="empty-chart"><div className="empty-icon"><CircleDollarSign size={25} /></div><strong>Nenhuma despesa neste mês</strong><span>Seus gastos por categoria aparecerão aqui.</span></div>}
       </article>
-      <article className="panel chart-panel"><div className="panel-heading"><div><h2>Receitas x despesas</h2><p>Comparativo dos últimos 6 meses</p></div><span className="panel-kicker">6 MESES</span></div>
-        <div className="bar-chart-wrap"><ResponsiveContainer width="100%" height="100%"><BarChart data={barData} margin={{ top: 8, right: 0, left: -18, bottom: 0 }} barGap={7}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" /><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} tickFormatter={(value: number) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value)} /><Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} /><Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: 10 }} /><Bar dataKey="Receitas" fill="#16a34a" radius={[5, 5, 0, 0]} maxBarSize={22} /><Bar dataKey="Despesas" fill="#f97316" radius={[5, 5, 0, 0]} maxBarSize={22} /></BarChart></ResponsiveContainer></div>
+      <article className="panel chart-panel"><div className="panel-heading premium-chart-heading">
+        <div><h2>Evolução financeira</h2><p>Valores registrados (inclui pendentes)</p></div>
+        <div className="premium-chart-filters">
+          <div className="premium-chart-switch" role="group" aria-label="Período">
+            <button type="button" className={chartMonths === 6 ? "active" : ""} aria-pressed={chartMonths === 6} onClick={() => setChartMonths(6)}>6M</button>
+            <button type="button" className={chartMonths === 12 ? "active" : ""} aria-pressed={chartMonths === 12} onClick={() => setChartMonths(12)}>12M</button>
+          </div>
+          <div className="premium-chart-switch" role="group" aria-label="Visualização">
+            <button type="button" className={chartStyle === "area" ? "active" : ""} aria-pressed={chartStyle === "area"} onClick={() => setChartStyle("area")}>Linha</button>
+            <button type="button" className={chartStyle === "bars" ? "active" : ""} aria-pressed={chartStyle === "bars"} onClick={() => setChartStyle("bars")}>Barras</button>
+          </div>
+        </div>
+      </div>
+        <div className="bar-chart-wrap" role="img" aria-label={"Gráfico de receitas e despesas dos últimos " + chartMonths + " meses"}>
+          <ResponsiveContainer width="100%" height="100%">
+            {chartStyle === "area" ? <AreaChart data={chartData} margin={{ top: 12, right: 4, left: -15, bottom: 0 }}>
+              <defs>
+                <linearGradient id="v7-income" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="var(--green)" stopOpacity={0.25} /><stop offset="95%" stopColor="var(--green)" stopOpacity={0} /></linearGradient>
+                <linearGradient id="v7-expense" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="var(--orange)" stopOpacity={0.20} /><stop offset="95%" stopColor="var(--orange)" stopOpacity={0} /></linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--chart-grid)" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} interval="preserveStartEnd" tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} tickFormatter={(value: number) => value >= 1000 ? (value / 1000).toFixed(1) + "k" : String(value)} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+              <Area type="monotone" dataKey="Receitas" stroke="var(--green)" fill="url(#v7-income)" strokeWidth={2.5} activeDot={{ r: 5 }} />
+              <Area type="monotone" dataKey="Despesas" stroke="var(--orange)" fill="url(#v7-expense)" strokeWidth={2.5} activeDot={{ r: 5 }} />
+            </AreaChart> : <BarChart data={chartData} margin={{ top: 8, right: 0, left: -18, bottom: 0 }} barGap={7}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} interval="preserveStartEnd" tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} tickFormatter={(value: number) => value >= 1000 ? (value / 1000).toFixed(1) + "k" : String(value)} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+              <Bar dataKey="Receitas" fill="var(--green)" radius={[5, 5, 0, 0]} maxBarSize={23} />
+              <Bar dataKey="Despesas" fill="var(--orange)" radius={[5, 5, 0, 0]} maxBarSize={23} />
+            </BarChart>}
+          </ResponsiveContainer>
+        </div>
       </article>
     </section>
 
