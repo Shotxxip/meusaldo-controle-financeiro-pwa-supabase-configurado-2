@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { addMonths, subMonths } from "date-fns";
 import { ArrowDownLeft, ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, CircleDollarSign, Plus, Search, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
@@ -11,6 +12,7 @@ import { TransactionDialog } from "@/components/transactions/transaction-dialog"
 import { TransactionRow } from "@/components/transactions/transaction-row";
 import type { Transaction } from "@/types/finance";
 import { SavingsWidgets } from "@/components/savings/savings-widgets";
+import { PremiumSummary } from "@/components/dashboard/premium-summary";
 
 export function Dashboard() {
   const { transactions, categories, loading, error, refresh } = useFinanceData();
@@ -24,6 +26,10 @@ export function Dashboard() {
   const monthTransactions = useMemo(() => transactions.filter((item) => item.date >= range.from && item.date <= range.to), [transactions, range.from, range.to]);
   const paidMonthTotals = useMemo(() => totals(monthTransactions), [monthTransactions]);
   const allTimeTotals = useMemo(() => totals(transactions), [transactions]);
+  const previousMonthTotals = useMemo(() => {
+    const previous = monthRange(subMonths(selectedMonth, 1));
+    return totals(transactions.filter(item => item.date >= previous.from && item.date <= previous.to));
+  }, [transactions, selectedMonth]);
   const expensesByCategory = useMemo(() => {
     const map = new Map<string, { name: string; value: number; color: string }>();
     monthTransactions.filter((item) => item.type === "expense").forEach((item) => {
@@ -62,11 +68,9 @@ export function Dashboard() {
     {error && <div className="inline-error">{error}</div>}
     <div className="month-toolbar"><div className="month-label"><CalendarDays size={17} /><strong>{title}</strong></div><div className="month-controls"><button className="icon-button" onClick={() => changeMonth(-1)} aria-label="Mês anterior"><ArrowLeft size={17} /></button><button className="month-today" onClick={() => setSelectedMonth(new Date(new Date().getFullYear(), new Date().getMonth(), 1))}>Este mês</button><button className="icon-button" onClick={() => changeMonth(1)} aria-label="Próximo mês"><ArrowRight size={17} /></button></div></div>
 
-    <section className="summary-grid">
-      <article className="summary-card balance-card"><div className="summary-card-top"><span>Saldo atual</span><span className="summary-icon"><Wallet size={19} /></span></div><strong className="summary-value">{loading ? "••••••" : formatCurrency(allTimeTotals.balance)}</strong><div className="summary-foot"><span className="summary-foot-dot" />Saldo acumulado de lançamentos pagos</div></article>
-      <article className="summary-card income-card"><div className="summary-card-top"><span>Receitas do mês</span><span className="summary-icon"><TrendingUp size={19} /></span></div><strong className="summary-value">{loading ? "••••••" : formatCurrency(paidMonthTotals.income)}</strong><div className="summary-foot"><ArrowDownLeft size={14} />Entradas confirmadas</div></article>
-      <article className="summary-card expense-card"><div className="summary-card-top"><span>Despesas do mês</span><span className="summary-icon"><TrendingDown size={19} /></span></div><strong className="summary-value">{loading ? "••••••" : formatCurrency(paidMonthTotals.expense)}</strong><div className="summary-foot"><ArrowUpRight size={14} />Saídas confirmadas</div></article>
-    </section>
+    <PremiumSummary loading={loading} balance={allTimeTotals.balance}
+      income={paidMonthTotals.income} expense={paidMonthTotals.expense}
+      previousIncome={previousMonthTotals.income} previousExpense={previousMonthTotals.expense} />
 
     <SavingsWidgets />
 
