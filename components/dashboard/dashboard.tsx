@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { addMonths, subMonths } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarDays, CircleDollarSign, Plus, Search, Wallet, X, PiggyBank, Target, SlidersHorizontal } from "lucide-react";
@@ -13,6 +13,7 @@ import { TransactionRow } from "@/components/transactions/transaction-row";
 import type { Transaction } from "@/types/finance";
 import { SavingsWidgets } from "@/components/savings/savings-widgets";
 import { PremiumSummary } from "@/components/dashboard/premium-summary";
+import { FinancialInsights } from "@/components/dashboard/financial-insights";
 
 export function Dashboard() {
   const { transactions, categories, loading, error, refresh } = useFinanceData();
@@ -25,14 +26,34 @@ export function Dashboard() {
   const [chartStyle, setChartStyle] = useState<"area" | "bars">("area");
   const [quickOpen, setQuickOpen] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
-  const [sections, setSections] = useState({ goals: true, charts: true, recent: true });
+  const [sections, setSections] = useState({ insights: true, goals: true, charts: true, recent: true });
+  const quickActionsRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("meusaldo-v7-dashboard-sections") || "{}");
       if (saved && typeof saved === "object") {
-        setSections({ goals: saved.goals !== false, charts: saved.charts !== false, recent: saved.recent !== false });
+        setSections({ insights: saved.insights !== false, goals: saved.goals !== false, charts: saved.charts !== false, recent: saved.recent !== false });
       }
     } catch { /* keep defaults */ }
+  }, []);
+  useEffect(() => {
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setQuickOpen(false);
+        setShowCustomizer(false);
+      }
+    };
+    const onOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !quickActionsRef.current?.contains(event.target)) {
+        setQuickOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onEscape);
+    document.addEventListener("pointerdown", onOutside);
+    return () => {
+      document.removeEventListener("keydown", onEscape);
+      document.removeEventListener("pointerdown", onOutside);
+    };
   }, []);
   function toggleSection(key: keyof typeof sections) {
     setSections(previous => {
@@ -108,6 +129,7 @@ export function Dashboard() {
         </button>
         {showCustomizer && <div className="premium-section-popover">
           {([
+            ["insights", "Insights e pendências"],
             ["goals", "Minhas metas"],
             ["charts", "Gráficos"],
             ["recent", "Últimas transações"]
@@ -118,6 +140,7 @@ export function Dashboard() {
         </div>}
       </div>
     </div>
+    {sections.insights && <FinancialInsights transactions={transactions} monthFrom={range.from} monthTo={range.to} loading={loading} />}
     {sections.goals && <SavingsWidgets />}
 
     {sections.charts && <section className="charts-grid">
@@ -170,7 +193,7 @@ export function Dashboard() {
       <div className="transaction-toolbar"><div className="search-field"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar lançamento..." aria-label="Buscar lançamento" /></div><div className="filter-tabs"><button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>Todas</button><button className={filter === "income" ? "active" : ""} onClick={() => setFilter("income")}>Receitas</button><button className={filter === "expense" ? "active" : ""} onClick={() => setFilter("expense")}>Despesas</button></div></div>
       {loading ? <div className="loading-list"><span className="loading-line" /><span className="loading-line" /><span className="loading-line" /></div> : recentTransactions.length ? <div className="transaction-list">{recentTransactions.map((item) => <TransactionRow key={item.id} transaction={item} onEdit={() => editTransaction(item)} onDelete={() => void deleteTransaction(item)} />)}</div> : <div className="empty-state"><div className="empty-icon"><Wallet size={24} /></div><strong>Nenhuma movimentação encontrada</strong><span>Adicione sua primeira receita ou despesa para começar.</span><button className="button button-secondary" onClick={() => { setEditing(null); setDialogOpen(true); }}><Plus size={16} /> Adicionar transação</button></div>}
     </section>}
-    <div className="premium-quick-actions">
+    <div className="premium-quick-actions" ref={quickActionsRef}>
       {quickOpen && <nav className="premium-quick-menu" aria-label="Ações rápidas">
         <button type="button" onClick={() => { setQuickOpen(false); setEditing(null); setDialogOpen(true); }}><Plus size={18} /> Nova transação</button>
         <Link href="/economias?registrar=1" onClick={() => setQuickOpen(false)}><PiggyBank size={18} /> Guardar dinheiro</Link>
