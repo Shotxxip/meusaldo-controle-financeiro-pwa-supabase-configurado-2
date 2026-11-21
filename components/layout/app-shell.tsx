@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CreditCard, LayoutDashboard, LogOut, Menu, Tags, X, Target, PiggyBank, Palette, BarChart3, WalletCards } from "lucide-react";
+import { CreditCard, LayoutDashboard, LogOut, Menu, Tags, X, Target, PiggyBank, Palette, BarChart3, WalletCards, CalendarClock, Trophy, Archive } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -18,6 +18,9 @@ const links = [
   { href: "/economias", label: "Economias", icon: PiggyBank },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { href: "/orcamento", label: "Orçamento", icon: WalletCards },
+  { href: "/recorrentes", label: "Contas fixas", icon: CalendarClock },
+  { href: "/planejamento", label: "Planejamento", icon: Trophy },
+  { href: "/backup", label: "Backup", icon: Archive },
   { href: "/aparencia", label: "Aparência", icon: Palette }
 ];
 
@@ -37,7 +40,7 @@ export function AppShell({ children, email }: { children: ReactNode; email: stri
     } finally { setLoggingOut(false); }
   }
 
-  const nav = (mobile = false) => (mobile ? links.filter(link => link.href !== "/aparencia" && link.href !== "/relatorios" && link.href !== "/orcamento") : links).map(({ href, label, icon: Icon }) => {
+  const nav = (mobile = false) => (mobile ? links.filter(link => ["/","/transacoes","/categorias","/metas","/economias"].includes(link.href)) : links).map(({ href, label, icon: Icon }) => {
     const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
     return <Link key={href} href={href} onClick={() => setMenuOpen(false)} className={cn(mobile ? "bottom-link" : "sidebar-link", active && "active")}>
       <Icon size={mobile ? 20 : 19} strokeWidth={active ? 2.3 : 1.8} />
