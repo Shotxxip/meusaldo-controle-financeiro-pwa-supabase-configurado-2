@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CreditCard, LayoutDashboard, LogOut, Menu, Tags, X, Target, PiggyBank, Palette, BarChart3, WalletCards, CalendarClock, Trophy, Archive } from "lucide-react";
+import { CreditCard, LayoutDashboard, LogOut, Menu, Tags, X, Target, PiggyBank, Palette, BarChart3, WalletCards, CalendarClock, Trophy, Archive, Bell } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -21,6 +21,7 @@ const links = [
   { href: "/recorrentes", label: "Contas fixas", icon: CalendarClock },
   { href: "/planejamento", label: "Planejamento", icon: Trophy },
   { href: "/backup", label: "Backup", icon: Archive },
+  { href: "/avisos", label: "Avisos", icon: Bell },
   { href: "/aparencia", label: "Aparência", icon: Palette }
 ];
 
