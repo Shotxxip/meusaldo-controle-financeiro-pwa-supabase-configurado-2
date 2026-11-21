@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { Check, Wallet } from "lucide-react";
 
 export const STORAGE_KEY = "meusaldo-v5-appearance";
 export const DEFAULT_APPEARANCE = { name: "MeuSaldo", color: "#6d45d8", logo: "" };
@@ -60,7 +61,7 @@ export function BrandIdentity() {
   }, []);
   return <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
     {appearance.logo ? <img src={appearance.logo} alt="" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 10 }} /> :
-      <span className="brand-mark" aria-hidden="true" style={{ fontSize: 19 }}>▣</span>}
+      <span className="brand-mark" aria-hidden="true"><Wallet size={20} /></span>}
     <span>{appearance.name || "MeuSaldo"}</span>
   </span>;
 }
@@ -88,36 +89,77 @@ export function AppearanceSettings() {
     };
     reader.readAsDataURL(file);
   }
-  return <section style={{ maxWidth: 620, display: "grid", gap: 24 }}>
-    <header><h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Aparência</h1>
-      <p style={{ color: "var(--muted-foreground)" }}>Personalize este dispositivo. Suas finanças não serão alteradas.</p></header>
-    <div style={{ padding: 22, background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 16, display: "grid", gap: 22 }}>
-      <label className="field"><span>Nome do aplicativo</span>
-        <input className="text-input" maxLength={28} value={appearance.name} onChange={e => change({ name: e.target.value })} placeholder="Nome do aplicativo" />
-      </label>
-      <div className="field"><span>Cor principal</span>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          {palette.map(color => <button key={color} type="button" onClick={() => change({ color })} aria-label={`Escolher cor ${color}`} aria-pressed={appearance.color === color} style={{ width: 42, height: 42, background: color, border: appearance.color === color ? "3px solid var(--foreground)" : "2px solid transparent", borderRadius: 12 }} />)}
-          <input type="color" value={appearance.color} onChange={e => change({ color: e.target.value })} aria-label="Escolher cor personalizada" style={{ width: 44, height: 42, cursor: "pointer" }} />
+
+  return <div className="appearance-page">
+    <header className="page-heading appearance-heading">
+      <div><span className="eyebrow">IDENTIDADE VISUAL</span><h1>Aparência</h1>
+        <p>Deixe o MeuSaldo com o seu estilo. As mudanças são salvas neste dispositivo.</p>
+      </div>
+    </header>
+    <div className="appearance-layout">
+      <section className="panel appearance-config" aria-label="Configurações de aparência">
+        <div className="appearance-section">
+          <div className="appearance-section-heading"><strong>Nome do aplicativo</strong><span>Como o nome aparece no menu e no título da página.</span></div>
+          <input className="text-input" maxLength={28} aria-label="Nome do aplicativo"
+            value={appearance.name} onChange={e => change({ name: e.target.value })}
+            placeholder="Nome do aplicativo" />
         </div>
-      </div>
-      <label className="field"><span>Tema</span>
-        <select className="text-input" value={theme || "system"} onChange={e => setTheme(e.target.value)}>
-          <option value="system">Automático (sistema)</option>
-          <option value="light">Claro</option>
-          <option value="dark">Escuro</option>
-        </select>
-      </label>
-      <div className="field"><span>Logo personalizada (PNG, JPG ou WebP, até 1 MB)</span>
-        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => void uploadLogo(e.target.files?.[0])} />
-        {appearance.logo && <button type="button" className="button button-ghost" onClick={() => change({ logo: "" })}>Remover logo</button>}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <BrandIdentity />
-      </div>
-      <button type="button" className="button button-secondary" onClick={() => change(DEFAULT_APPEARANCE)}>Restaurar nome, cor e logo padrão</button>
-      {notice && <p role="status" style={{ color: "var(--muted-foreground)", margin: 0 }}>{notice}</p>}
+        <div className="appearance-section">
+          <div className="appearance-section-heading"><strong>Cor principal</strong><span>Escolha uma das paletas ou use sua própria cor.</span></div>
+          <div className="appearance-palette">
+            {palette.map((color, index) => <button key={color} type="button"
+              className={appearance.color === color ? "appearance-swatch selected" : "appearance-swatch"}
+              onClick={() => change({ color })}
+              aria-label={["Roxo", "Azul", "Verde", "Rosa", "Laranja", "Verde petróleo"][index]}
+              aria-pressed={appearance.color === color}
+              title={color}
+              style={{ backgroundColor: color }}>
+                {appearance.color === color && <Check size={19} strokeWidth={3} aria-hidden="true" />}
+              </button>)}
+            <label className="appearance-color-custom" title="Escolher outra cor">
+              <span className="sr-only">Cor personalizada</span>
+              <input type="color" value={appearance.color} onChange={e => change({ color: e.target.value })}
+                aria-label="Escolher cor personalizada" />
+            </label>
+          </div>
+        </div>
+        <div className="appearance-section">
+          <label className="appearance-section-heading" htmlFor="appearance-theme"><strong>Tema</strong><span>Prefere claro, escuro ou automático?</span></label>
+          <select id="appearance-theme" className="text-input" value={theme || "system"} onChange={e => setTheme(e.target.value)}>
+            <option value="system">Automático (sistema)</option>
+            <option value="light">Claro</option>
+            <option value="dark">Escuro</option>
+          </select>
+        </div>
+        <div className="appearance-section">
+          <div className="appearance-section-heading"><strong>Logo do aplicativo</strong><span>PNG, JPG ou WebP, até 1 MB.</span></div>
+          <input className="appearance-file-input" type="file" accept="image/png,image/jpeg,image/webp"
+            aria-label="Enviar logo personalizada" onChange={e => void uploadLogo(e.target.files?.[0])} />
+          {appearance.logo && <button type="button" className="button button-ghost" onClick={() => change({ logo: "" })}>Remover logo personalizada</button>}
+        </div>
+        <div className="appearance-actions">
+          <button type="button" className="button button-secondary" onClick={() => change(DEFAULT_APPEARANCE)}>Restaurar nome, cor e logo</button>
+          {notice && <p role="status">{notice}</p>}
+        </div>
+      </section>
+      <aside className="appearance-preview-column">
+        <div className="appearance-preview panel" aria-label="Prévia do aplicativo">
+          <span className="appearance-preview-kicker">PRÉVIA AO VIVO</span>
+          <div className="appearance-preview-identity">
+            {appearance.logo ? <img src={appearance.logo} alt="" className="appearance-preview-logo" />
+              : <span className="appearance-preview-mark"><Wallet size={26} aria-hidden="true" /></span>}
+            <strong>{appearance.name || "MeuSaldo"}</strong>
+          </div>
+          <div className="appearance-preview-divider" />
+          <div className="appearance-preview-demo">
+            <span className="appearance-preview-dot" />
+            <span className="appearance-preview-bar" />
+            <span className="appearance-preview-action" />
+          </div>
+          <p>O resultado aparece imediatamente no menu do aplicativo.</p>
+        </div>
+        <p className="appearance-local-note">A personalização vale apenas neste navegador. O ícone do aplicativo instalado no celular ainda depende do sistema operacional e não é atualizado por esta tela.</p>
+      </aside>
     </div>
-    <p style={{ color: "var(--muted-foreground)", fontSize: 12 }}>Nesta etapa, a logo muda dentro do aplicativo. A atualização do ícone instalado e do manifesto PWA será feita na próxima etapa.</p>
-  </section>;
+  </div>;
 }
