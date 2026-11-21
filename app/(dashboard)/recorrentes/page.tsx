@@ -13,7 +13,7 @@ function dateOf(month: string, day: number) {
   return new Date(year, num - 1, Math.min(day, max), 12);
 }
 export default function RecorrentesPage() {
-  const { categories, transactions, loading, error } = useFinanceData();
+  const { categories, transactions, loading, error, userId } = useFinanceData();
   const [items, setItems] = useState<Recurring[]>([]);
   const [month, setMonth] = useState(nowMonth);
   const [title, setTitle] = useState("");
@@ -22,14 +22,15 @@ export default function RecorrentesPage() {
   const [categoryId, setCategoryId] = useState("");
   const [saved, setSaved] = useState(false);
   useEffect(() => {
+    if (!userId) return;
     try {
-      const data: unknown = JSON.parse(localStorage.getItem(KEY) || "[]");
+      const data: unknown = JSON.parse(localStorage.getItem(`${KEY}-${userId}`) || "[]");
       if (Array.isArray(data)) setItems(data.filter(x => x && typeof x.id === "string" && typeof x.title === "string" && Number.isFinite(x.amount)));
     } catch { setItems([]); }
-  }, []);
+  }, [userId]);
   function persist(next: Recurring[]) {
     setItems(next);
-    try { localStorage.setItem(KEY, JSON.stringify(next)); setSaved(true); }
+    try { if (userId) localStorage.setItem(`${KEY}-${userId}`, JSON.stringify(next)); setSaved(true); }
     catch { setSaved(false); }
   }
   function add(event: React.FormEvent<HTMLFormElement>) {
