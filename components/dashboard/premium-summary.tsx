@@ -24,7 +24,7 @@ function ChangeIndicator({ current, previous, positiveIsGood }: { current: numbe
 }
 
 export function PremiumSummary({ loading, balance, income, expense, previousIncome, previousExpense }: Props) {
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(true);
   useEffect(() => {
     try { setHidden(localStorage.getItem("meusaldo-v7-hide-balance") === "true"); }
     catch { /* preference unavailable */ }
@@ -35,7 +35,7 @@ export function PremiumSummary({ loading, balance, income, expense, previousInco
       return !value;
     });
   }
-  const display = (value: number) => loading ? "Carregando..." : hidden ? "R$ ••••••" : formatCurrency(value);
+  const display = (value: number) => loading ? <span className="premium-value-skeleton" aria-label="Carregando valor" /> : hidden ? "R$ ••••••" : formatCurrency(value);
   return <section className="premium-summary-grid" aria-label="Resumo financeiro">
     <article className="premium-balance-card">
       <div className="premium-balance-head">
