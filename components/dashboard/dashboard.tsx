@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { addMonths, subMonths } from "date-fns";
-import { ArrowDownLeft, ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, CircleDollarSign, Plus, Search, TrendingDown, TrendingUp, Wallet } from "lucide-react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
+import { ArrowLeft, ArrowRight, CalendarDays, CircleDollarSign, Plus, Search, Wallet, X, PiggyBank, Target, SlidersHorizontal } from "lucide-react";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Bar, BarChart, Area, AreaChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 import { useFinanceData } from "@/hooks/use-finance-data";
-import { formatCurrency, getSixMonthLabels, monthLabel, monthRange, totals } from "@/lib/utils/finance";
+import { formatCurrency, monthLabel, monthRange, totals } from "@/lib/utils/finance";
 import { TransactionDialog } from "@/components/transactions/transaction-dialog";
 import { TransactionRow } from "@/components/transactions/transaction-row";
 import type { Transaction } from "@/types/finance";
@@ -21,6 +21,27 @@ export function Dashboard() {
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
+  const [chartMonths, setChartMonths] = useState<6 | 12>(6);
+  const [chartStyle, setChartStyle] = useState<"area" | "bars">("area");
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [showCustomizer, setShowCustomizer] = useState(false);
+  const [sections, setSections] = useState({ goals: true, charts: true, recent: true });
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("meusaldo-v7-dashboard-sections") || "{}");
+      if (saved && typeof saved === "object") {
+        setSections({ goals: saved.goals !== false, charts: saved.charts !== false, recent: saved.recent !== false });
+      }
+    } catch { /* keep defaults */ }
+  }, []);
+  function toggleSection(key: keyof typeof sections) {
+    setSections(previous => {
+      const next = { ...previous, [key]: !previous[key] };
+      try { localStorage.setItem("meusaldo-v7-dashboard-sections", JSON.stringify(next)); } catch { /* private browsing */ }
+      return next;
+    });
+  }
+
 
   const range = monthRange(selectedMonth);
   const monthTransactions = useMemo(() => transactions.filter((item) => item.date >= range.from && item.date <= range.to), [transactions, range.from, range.to]);
@@ -40,10 +61,16 @@ export function Dashboard() {
     });
     return [...map.values()].sort((a, b) => b.value - a.value);
   }, [monthTransactions]);
-  const barData = useMemo(() => getSixMonthLabels(selectedMonth).map(({ key, label }) => {
-    const items = transactions.filter((item) => item.date.startsWith(key));
-    return { month: label, Receitas: items.filter((item) => item.type === "income").reduce((sum, item) => sum + Number(item.amount), 0), Despesas: items.filter((item) => item.type === "expense").reduce((sum, item) => sum + Number(item.amount), 0) };
-  }), [transactions, selectedMonth]);
+  const chartData = useMemo(() => Array.from({ length: chartMonths }, (_, index) => {
+    const date = subMonths(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1), chartMonths - 1 - index);
+    const key = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
+    const items = transactions.filter(item => item.date.startsWith(key));
+    return {
+      month: date.toLocaleDateString("pt-BR", { month: "short" }),
+      Receitas: items.filter(item => item.type === "income").reduce((sum, item) => sum + Number(item.amount), 0),
+      Despesas: items.filter(item => item.type === "expense").reduce((sum, item) => sum + Number(item.amount), 0)
+    };
+  }), [transactions, selectedMonth, chartMonths]);
   const recentTransactions = useMemo(() => transactions.filter((item) => {
     const matchesText = `${item.description} ${item.category?.name ?? ""}`.toLowerCase().includes(search.toLowerCase());
     const matchesType = filter === "all" || item.type === filter;
